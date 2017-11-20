@@ -19,6 +19,7 @@ Pacman agents (in searchAgents.py).
 
 import util
 
+
 class SearchProblem:
     """
     This class outlines the structure of a search problem, but doesn't implement
@@ -72,32 +73,60 @@ def tinyMazeSearch(problem):
     w = Directions.WEST
     return  [s, s, w, s, w, w, s, w]
 
+
+def search_function(problem, fringe, update_fringe):
+
+    start_node = [(problem.getStartState(),), [], 0]
+    update_fringe(fringe, start_node, 0)
+    closed_set = set()
+
+    while not fringe.isEmpty():
+        node = fringe.pop()
+        state, path, cost = node
+        loc = state[0]
+
+        if loc in closed_set:
+            continue
+
+        if problem.isGoalState(loc):
+            return path
+
+        closed_set.add(loc)
+
+        new_states = problem.getSuccessors(loc)
+        for new_state in new_states:
+            new_cost = cost + new_state[2]
+            new_path = path + [new_state[1]]
+            update_fringe(fringe, [new_state, new_path, new_cost], new_cost)
+
+
 def depthFirstSearch(problem):
     """
     Search the deepest nodes in the search tree first.
-
-    Your search algorithm needs to return a list of actions that reaches the
-    goal. Make sure to implement a graph search algorithm.
-
-    To get started, you might want to try some of these simple commands to
-    understand the search problem that is being passed in:
-
-    print "Start:", problem.getStartState()
-    print "Is the start a goal?", problem.isGoalState(problem.getStartState())
-    print "Start's successors:", problem.getSuccessors(problem.getStartState())
     """
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    def update_function(fringe, node, cost=None):
+        fringe.push(node)
+
+    return search_function(problem, util.Stack(), update_function)
+
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    def update_function(fringe, node, cost=None):
+        fringe.push(node)
+
+    return search_function(problem, util.Queue(), update_function)
+
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    def update_function(fringe, node, cost):
+        fringe.push(node, cost)
+
+    return search_function(problem, util.PriorityQueue(), update_function)
+
 
 def nullHeuristic(state, problem=None):
     """
@@ -106,10 +135,14 @@ def nullHeuristic(state, problem=None):
     """
     return 0
 
+
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    def update_function(fringe, node, cost):
+        total_cost = cost + heuristic(node[0][0], problem)
+        fringe.push(node, total_cost)
+
+    return search_function(problem, util.PriorityQueue(), update_function)
 
 
 # Abbreviations
