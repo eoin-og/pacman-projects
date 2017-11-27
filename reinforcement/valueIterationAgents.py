@@ -42,9 +42,19 @@ class ValueIterationAgent(ValueEstimationAgent):
         self.discount = discount
         self.iterations = iterations
         self.values = util.Counter() # A Counter is a dict with default 0
+        self.calculate_values(iterations)
 
-        # Write value iteration code here
-        "*** YOUR CODE HERE ***"
+
+    def calculate_values(self, iterations):
+        for _ in range(iterations):
+
+          batch_values = self.values.copy()
+          
+          states = (s for s in self.mdp.getStates() if not self.mdp.isTerminal(s))
+          for s in states:
+            batch_values[s] = max([self.getQValue(s, a) for a in self.mdp.getPossibleActions(s)])
+
+          self.values = batch_values
 
 
     def getValue(self, state):
@@ -54,13 +64,14 @@ class ValueIterationAgent(ValueEstimationAgent):
         return self.values[state]
 
 
-    def computeQValueFromValues(self, state, action):
+    def computeQValueFromValues(self, s, a):
         """
           Compute the Q-value of action in state from the
           value function stored in self.values.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        t = self.mdp.getTransitionStatesAndProbs
+        r = self.mdp.getReward
+        return sum([p*(r(s, a, s_prime) + self.discount*self.getValue(s_prime)) for s_prime, p in t(s, a)])
 
     def computeActionFromValues(self, state):
         """
@@ -71,8 +82,13 @@ class ValueIterationAgent(ValueEstimationAgent):
           there are no legal actions, which is the case at the
           terminal state, you should return None.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        best_action, best_score = 0, -99999
+        for a in self.mdp.getPossibleActions(state):
+          qvalue = self.computeQValueFromValues(state, a)
+          if qvalue > best_score:
+            best_action, best_score = a, qvalue
+
+        return best_action
 
     def getPolicy(self, state):
         return self.computeActionFromValues(state)
