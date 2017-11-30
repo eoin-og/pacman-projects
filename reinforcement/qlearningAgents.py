@@ -81,9 +81,9 @@ class QLearningAgent(ReinforcementAgent):
           if qvalue == best_score:
             best_actions.append(a)
           if qvalue > best_score:
-            best_action, best_score = [a], qvalue
+            best_actions, best_score = [a], qvalue
 
-        return random.choice(best_action)
+        return random.choice(best_actions)
 
     def getAction(self, state):
         """
