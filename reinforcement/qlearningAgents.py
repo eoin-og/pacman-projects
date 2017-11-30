@@ -42,7 +42,7 @@ class QLearningAgent(ReinforcementAgent):
         "You can initialize Q-values here..."
         ReinforcementAgent.__init__(self, **args)
 
-        "*** YOUR CODE HERE ***"
+        self.values = util.Counter()
 
     def getQValue(self, state, action):
         """
@@ -50,28 +50,40 @@ class QLearningAgent(ReinforcementAgent):
           Should return 0.0 if we have never seen a state
           or the Q node value otherwise
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return self.values[(state, action)]
 
 
-    def computeValueFromQValues(self, state):
+    def computeValueFromQValues(self, s):
         """
           Returns max_action Q(state,action)
           where the max is over legal actions.  Note that if
           there are no legal actions, which is the case at the
           terminal state, you should return a value of 0.0.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        try:
+          return max([self.getQValue(s, a) for a in self.getLegalActions(s)])
+        except ValueError:
+          return 0.0
 
-    def computeActionFromQValues(self, state):
+    def computeActionFromQValues(self, s):
         """
           Compute the best action to take in a state.  Note that if there
           are no legal actions, which is the case at the terminal state,
           you should return None.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        actions = self.getLegalActions(s)
+        if not actions:
+          return None
+
+        best_actions, best_score = [], -99999
+        for a in actions:
+          qvalue = self.getQValue(s, a)
+          if qvalue == best_score:
+            best_actions.append(a)
+          if qvalue > best_score:
+            best_actions, best_score = [a], qvalue
+
+        return random.choice(best_actions)
 
     def getAction(self, state):
         """
@@ -86,9 +98,11 @@ class QLearningAgent(ReinforcementAgent):
         """
         # Pick Action
         legalActions = self.getLegalActions(state)
-        action = None
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        
+        if util.flipCoin(self.epsilon):
+          action = random.choice(legalActions)
+        else:
+          action = self.computeActionFromQValues(state)
 
         return action
 
@@ -101,8 +115,8 @@ class QLearningAgent(ReinforcementAgent):
           NOTE: You should never call this function,
           it will be called on your behalf
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        sample = reward + self.discount*self.computeValueFromQValues(nextState)
+        self.values[(state, action)] += self.alpha*(sample - self.values[(state, action)])
 
     def getPolicy(self, state):
         return self.computeActionFromQValues(state)
@@ -159,20 +173,24 @@ class ApproximateQAgent(PacmanQAgent):
     def getWeights(self):
         return self.weights
 
-    def getQValue(self, state, action):
+    def getQValue(self, s, a):
         """
           Should return Q(state,action) = w * featureVector
           where * is the dotProduct operator
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        featureVector = self.featExtractor.getFeatures(s, a)
+        return sum([self.weights[f]*v for f, v in featureVector.iteritems()])
 
-    def update(self, state, action, nextState, reward):
+
+    def update(self, s, a, next_s, r):
         """
            Should update your weights based on transition
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        difference = r + self.discount*self.computeValueFromQValues(next_s) - self.getQValue(s, a)
+        
+        featureVector = self.featExtractor.getFeatures(s, a)
+        for f, v in featureVector.iteritems():
+            self.weights[f] += self.alpha*difference*v 
 
     def final(self, state):
         "Called at the end of each game."
@@ -182,5 +200,5 @@ class ApproximateQAgent(PacmanQAgent):
         # did we finish training?
         if self.episodesSoFar == self.numTraining:
             # you might want to print your weights here for debugging
-            "*** YOUR CODE HERE ***"
+            # print self.weights
             pass
