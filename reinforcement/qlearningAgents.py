@@ -187,8 +187,8 @@ class ApproximateQAgent(PacmanQAgent):
            Should update your weights based on transition
         """
         difference = r + self.discount*self.computeValueFromQValues(next_s) - self.getQValue(s, a)
-        featureVector = self.featExtractor.getFeatures(s, a)
         
+        featureVector = self.featExtractor.getFeatures(s, a)
         for f, v in featureVector.iteritems():
             self.weights[f] += self.alpha*difference*v 
 
